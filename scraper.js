@@ -6,6 +6,7 @@ const cheerio = require("cheerio");
 const cron = require("node-cron");
 const express = require("express");
 const fs = require("fs").promises;
+const cors = require("cors");
 
 // ============================================
 // 1. KOPP'S FROZEN CUSTARD SCRAPER
@@ -709,6 +710,7 @@ const app = express();
 app.use(express.json());
 
 // Enable CORS
+app.use(cors());
 
 // Root route to verify server is running
 app.get("/", (req, res) => {
