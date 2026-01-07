@@ -1,0 +1,611 @@
+{
+  "timestamp": "2026-01-07T14:21:34.733Z",
+  "lastUpdated": "1/7/2026, 8:21:34 AM",
+  "totalLocations": 11,
+  "stands": [
+    {
+      "id": "kopps-greenfield",
+      "name": "Kopp's Frozen Custard",
+      "location": "Greenfield",
+      "address": "7631 W Layton Ave, Greenfield, WI",
+      "phone": "414-282-4312",
+      "status": "open",
+      "hours": "10:30am - 10:30pm",
+      "website": "https://kopps.com",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-08",
+          "dayLabel": "tomorrow",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-08",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-09",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-10",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-11",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-12",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-13",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-14",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-15",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-16",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-17",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-18",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-19",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-20",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-21",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-22",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-23",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-24",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-25",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-26",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-27",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-28",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-29",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-30",
+          "dayLabel": "saturday",
+          "flavors": []
+        }
+      ]
+    },
+    {
+      "id": "kopps-brookfield",
+      "name": "Kopp's Frozen Custard",
+      "location": "Brookfield",
+      "address": "18880 W Bluemound Rd, Brookfield, WI",
+      "phone": "262-789-9490",
+      "status": "open",
+      "hours": "10:30am - 10:30pm",
+      "website": "https://kopps.com",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-08",
+          "dayLabel": "tomorrow",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-08",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-09",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-10",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-11",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-12",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-13",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-14",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-15",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-16",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-17",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-18",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-19",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-20",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-21",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-22",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-23",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-24",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-25",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-26",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-27",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-28",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-29",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-30",
+          "dayLabel": "saturday",
+          "flavors": []
+        }
+      ]
+    },
+    {
+      "id": "kopps-glendale",
+      "name": "Kopp's Frozen Custard",
+      "location": "Glendale",
+      "address": "5373 N Port Washington Rd, Glendale, WI",
+      "phone": "414-961-3288",
+      "status": "open",
+      "hours": "10:30am - 10:30pm",
+      "website": "https://kopps.com",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-08",
+          "dayLabel": "tomorrow",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-08",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-09",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-10",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-11",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-12",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-13",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-14",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-15",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-16",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-17",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-18",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-19",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-20",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-21",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-22",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-23",
+          "dayLabel": "saturday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-24",
+          "dayLabel": "sunday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-25",
+          "dayLabel": "monday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-26",
+          "dayLabel": "tuesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-27",
+          "dayLabel": "wednesday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-28",
+          "dayLabel": "thursday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-29",
+          "dayLabel": "friday",
+          "flavors": []
+        },
+        {
+          "date": "2026-01-30",
+          "dayLabel": "saturday",
+          "flavors": []
+        }
+      ]
+    },
+    {
+      "id": "murfs-brookfield",
+      "name": "Murf's Frozen Custard",
+      "location": "Brookfield",
+      "address": "12505 W Burleigh Rd, Brookfield, WI",
+      "phone": "262-814-6873",
+      "status": "open",
+      "hours": "10:30am - 9:00pm (Closed Mondays)",
+      "website": "https://www.murfsfrozencustard.com",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": [
+            {
+              "name": "Check website",
+              "description": "Visit murfsfrozencustard.com for today's flavor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "west-milwaukee",
+      "name": "Culver's",
+      "location": "West Milwaukee - Miller Park Way",
+      "address": "1641 Miller Parkway, West Milwaukee, WI",
+      "phone": "414-645-1011",
+      "id": "culvers-west-milwaukee",
+      "status": "open",
+      "hours": "10:00am - 11:00pm",
+      "website": "https://www.culvers.com/restaurants/west-milwaukee",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": [
+            {
+              "name": "Check location",
+              "description": "Visit location for today's flavor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "milwaukee-good-hope",
+      "name": "Culver's",
+      "location": "Milwaukee - Good Hope Rd",
+      "address": "7515 W Good Hope Rd, Milwaukee, WI",
+      "phone": "414-760-0500",
+      "id": "culvers-milwaukee-good-hope",
+      "status": "open",
+      "hours": "10:00am - 11:00pm",
+      "website": "https://www.culvers.com/restaurants/milwaukee-good-hope",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": [
+            {
+              "name": "Check location",
+              "description": "Visit location for today's flavor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "milwaukee-fond-du-lac",
+      "name": "Culver's",
+      "location": "Milwaukee - Fond du Lac Ave",
+      "address": "W Fond du Lac Ave, Milwaukee, WI",
+      "phone": "414-444-1300",
+      "id": "culvers-milwaukee-fond-du-lac",
+      "status": "open",
+      "hours": "10:00am - 11:00pm",
+      "website": "https://www.culvers.com/restaurants/milwaukee-fond-du-lac",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": [
+            {
+              "name": "Check location",
+              "description": "Visit location for today's flavor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "milwaukee-capitol",
+      "name": "Culver's",
+      "location": "Milwaukee - Capitol Drive",
+      "address": "1325 E Capitol Dr, Milwaukee, WI",
+      "phone": "414-962-0900",
+      "id": "culvers-milwaukee-capitol",
+      "status": "open",
+      "hours": "10:00am - 11:00pm",
+      "website": "https://www.culvers.com/restaurants/milwaukee-capitol",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": [
+            {
+              "name": "Check location",
+              "description": "Visit location for today's flavor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "west-allis",
+      "name": "Culver's",
+      "location": "West Allis - Layton Ave",
+      "address": "575 W Layton Ave, Milwaukee, WI",
+      "phone": "414-321-8400",
+      "id": "culvers-west-allis",
+      "status": "open",
+      "hours": "10:00am - 11:00pm",
+      "website": "https://www.culvers.com/restaurants/west-allis",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "today",
+          "flavors": [
+            {
+              "name": "Check location",
+              "description": "Visit location for today's flavor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leons-milwaukee",
+      "name": "Leon's Frozen Custard",
+      "location": "Milwaukee",
+      "address": "3131 S 27th St, Milwaukee, WI",
+      "phone": "414-383-1784",
+      "status": "open",
+      "hours": "11:00am - 11:00pm",
+      "website": "https://leonsfrozencustardmke.com",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "always",
+          "flavors": [
+            {
+              "name": "Vanilla",
+              "description": "Classic vanilla custard (always available)"
+            },
+            {
+              "name": "Chocolate",
+              "description": "Rich chocolate custard (always available)"
+            },
+            {
+              "name": "Butter Pecan",
+              "description": "Butter pecan custard (always available)"
+            },
+            {
+              "name": "Weekend Special",
+              "description": "Check in-store or Facebook for weekend specials"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gilles-milwaukee",
+      "name": "Gilles Frozen Custard",
+      "location": "Milwaukee",
+      "address": "7515 W Bluemound Rd, Milwaukee, WI",
+      "phone": "414-453-4875",
+      "status": "closed",
+      "hours": "Reopens January 8th, 2026",
+      "website": "https://gillesfrozencustard.com",
+      "flavors": [
+        {
+          "date": "2026-01-07",
+          "dayLabel": "closed",
+          "flavors": [
+            {
+              "name": "Closed for Winter",
+              "description": "Returning January 8, 2026"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
