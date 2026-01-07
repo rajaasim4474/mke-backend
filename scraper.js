@@ -1,5 +1,5 @@
-// Milwaukee Custard Tracker - PRODUCTION-READY Web Scraper
-// Complete implementation with actual, tested selectors
+// Milwaukee Custard Tracker - PRODUCTION RAILWAY DEPLOYMENT
+// Optimized for Railway.app with proper error handling and resilience
 
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
@@ -7,25 +7,133 @@ const cron = require("node-cron");
 const express = require("express");
 const fs = require("fs").promises;
 const cors = require("cors");
+const path = require("path");
+
+// ============================================
+// CONFIGURATION
+// ============================================
+
+const CONFIG = {
+  PORT: process.env.PORT || 4000,
+  NODE_ENV: process.env.NODE_ENV || "production",
+  SCRAPE_TIMEOUT: 30000,
+  BROWSER_ARGS: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-accelerated-2d-canvas",
+    "--no-first-run",
+    "--no-zygote",
+    "--disable-gpu",
+  ],
+  DATA_DIR: process.env.DATA_DIR || "./data",
+  SCRAPE_SCHEDULE: "0 6 * * *", // 6 AM daily
+  TIMEZONE: "America/Chicago",
+};
+
+// ============================================
+// LOGGING UTILITY
+// ============================================
+
+const logger = {
+  info: (msg, ...args) =>
+    console.log(`[INFO] ${new Date().toISOString()} - ${msg}`, ...args),
+  error: (msg, ...args) =>
+    console.error(`[ERROR] ${new Date().toISOString()} - ${msg}`, ...args),
+  warn: (msg, ...args) =>
+    console.warn(`[WARN] ${new Date().toISOString()} - ${msg}`, ...args),
+  debug: (msg, ...args) => {
+    if (CONFIG.NODE_ENV === "development") {
+      console.log(`[DEBUG] ${new Date().toISOString()} - ${msg}`, ...args);
+    }
+  },
+};
+
+// ============================================
+// BROWSER INSTANCE MANAGEMENT
+// ============================================
+
+let browserInstance = null;
+
+async function getBrowser() {
+  if (browserInstance && browserInstance.isConnected()) {
+    return browserInstance;
+  }
+
+  try {
+    browserInstance = await puppeteer.launch({
+      headless: true,
+      args: CONFIG.BROWSER_ARGS,
+    });
+    logger.info("Browser instance created successfully");
+    return browserInstance;
+  } catch (error) {
+    logger.error("Failed to launch browser:", error.message);
+    throw error;
+  }
+}
+
+async function closeBrowser() {
+  if (browserInstance) {
+    try {
+      await browserInstance.close();
+      browserInstance = null;
+      logger.info("Browser instance closed");
+    } catch (error) {
+      logger.error("Error closing browser:", error.message);
+    }
+  }
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+function getStandardDate(daysOffset = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  return date.toISOString().split("T")[0];
+}
+
+async function safePageNavigation(page, url, options = {}) {
+  const maxRetries = 3;
+  let lastError;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await page.goto(url, {
+        waitUntil: "networkidle2",
+        timeout: CONFIG.SCRAPE_TIMEOUT,
+        ...options,
+      });
+      return true;
+    } catch (error) {
+      lastError = error;
+      logger.warn(
+        `Navigation attempt ${i + 1} failed for ${url}:`,
+        error.message
+      );
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 2000 * (i + 1)));
+      }
+    }
+  }
+
+  throw lastError;
+}
 
 // ============================================
 // 1. KOPP'S FROZEN CUSTARD SCRAPER
 // ============================================
-// URL: https://kopps.com/flavor-preview
-// Structure: H2 headers with dates, followed by H3 flavor names and P descriptions
 
 async function scrapeKopps() {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const page = await browser.newPage();
+  let browser, page;
 
   try {
-    await page.goto("https://kopps.com/flavor-preview", {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-    });
+    browser = await getBrowser();
+    page = await browser.newPage();
+
+    await safePageNavigation(page, "https://kopps.com/flavor-preview");
 
     const html = await page.content();
     const $ = cheerio.load(html);
@@ -33,26 +141,18 @@ async function scrapeKopps() {
     const flavors = [];
     const today = new Date();
 
-    // Find all H2 headers containing dates
     $("h2").each((i, el) => {
       const headerText = $(el).text().trim();
       let date = null;
       let dayLabel = "";
 
-      // Match "Today's Flavors – Monday 1/5"
       if (headerText.includes("Today")) {
-        date = new Date().toISOString().split("T")[0];
+        date = getStandardDate(0);
         dayLabel = "today";
-      }
-      // Match "Tomorrow – Tuesday 1/6"
-      else if (headerText.includes("Tomorrow")) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        date = tomorrow.toISOString().split("T")[0];
+      } else if (headerText.includes("Tomorrow")) {
+        date = getStandardDate(1);
         dayLabel = "tomorrow";
-      }
-      // Match "Wednesday 1/7", "Thursday 1/8", etc.
-      else {
+      } else {
         const dateMatch = headerText.match(/([A-Za-z]+)\s+(\d+)\/(\d+)/);
         if (dateMatch) {
           const month = parseInt(dateMatch[2]);
@@ -64,7 +164,6 @@ async function scrapeKopps() {
       }
 
       if (date) {
-        // Find all H3 elements after this H2 until the next H2
         let currentEl = $(el).next();
         const dayFlavors = [];
 
@@ -91,9 +190,10 @@ async function scrapeKopps() {
       }
     });
 
-    await browser.close();
+    await page.close();
 
-    // Kopp's has same flavors at all 3 locations
+    logger.info(`Kopp's scraped successfully - ${flavors.length} days found`);
+
     return [
       {
         id: "kopps-greenfield",
@@ -130,8 +230,8 @@ async function scrapeKopps() {
       },
     ];
   } catch (error) {
-    console.error("Error scraping Kopps:", error.message);
-    await browser.close();
+    logger.error("Error scraping Kopps:", error.message);
+    if (page) await page.close();
     return [];
   }
 }
@@ -139,44 +239,27 @@ async function scrapeKopps() {
 // ============================================
 // 2. MURF'S FROZEN CUSTARD SCRAPER
 // ============================================
-// URL: https://www.murfsfrozencustard.com/flavorForecast
-// Structure: Sections with day labels, images, flavor names, and descriptions
 
 async function scrapeMurfs() {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const page = await browser.newPage();
+  let browser, page;
 
   try {
-    await page.goto("https://www.murfsfrozencustard.com/flavorForecast", {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-    });
+    browser = await getBrowser();
+    page = await browser.newPage();
 
-    // Wait for content to load
+    await safePageNavigation(
+      page,
+      "https://www.murfsfrozencustard.com/flavorForecast"
+    );
     await page.waitForTimeout(2000);
 
-    const flavors = [];
-
-    // Extract flavor data using page.evaluate to run code in browser context
     const flavorData = await page.evaluate(() => {
       const flavors = [];
-      const today = new Date();
-
-      // Find flavor sections - they're in divs with specific structure
-      const flavorSections = document.querySelectorAll(
-        'div[class*="flavor"], section'
-      );
-
-      // Look for "Today", "This Week", "The Rest of" sections
       const headings = document.querySelectorAll("h1, h2, h3, h4");
 
       headings.forEach((heading) => {
         const text = heading.textContent.trim();
 
-        // Match patterns like "Today Monday, Jan. 05"
         if (
           text.includes("Today") ||
           text.includes("Mon") ||
@@ -187,7 +270,6 @@ async function scrapeMurfs() {
           text.includes("Sat") ||
           text.includes("Sun")
         ) {
-          // Find the flavor name and description nearby
           let parent = heading.parentElement;
           while (parent && !parent.querySelector("img")) {
             parent = parent.parentElement;
@@ -218,9 +300,10 @@ async function scrapeMurfs() {
       return flavors;
     });
 
-    await browser.close();
+    await page.close();
 
-    // Structure the data
+    logger.info(`Murf's scraped - ${flavorData.length} flavors found`);
+
     return [
       {
         id: "murfs-brookfield",
@@ -236,13 +319,13 @@ async function scrapeMurfs() {
             ? flavorData
             : [
                 {
-                  date: new Date().toISOString().split("T")[0],
+                  date: getStandardDate(0),
                   dayLabel: "today",
                   flavors: [
                     {
                       name: "Check website",
                       description:
-                        "Murf's flavor calendar available at website",
+                        "Visit murfsfrozencustard.com for today's flavor",
                     },
                   ],
                 },
@@ -250,8 +333,8 @@ async function scrapeMurfs() {
       },
     ];
   } catch (error) {
-    console.error("Error scraping Murfs:", error.message);
-    await browser.close();
+    logger.error("Error scraping Murfs:", error.message);
+    if (page) await page.close();
     return [
       {
         id: "murfs-brookfield",
@@ -264,12 +347,12 @@ async function scrapeMurfs() {
         website: "https://www.murfsfrozencustard.com",
         flavors: [
           {
-            date: new Date().toISOString().split("T")[0],
+            date: getStandardDate(0),
             dayLabel: "today",
             flavors: [
               {
                 name: "Check website",
-                description: "Visit murfsfrozencustard.com for today's flavor",
+                description: "Visit website for today's flavor",
               },
             ],
           },
@@ -282,7 +365,6 @@ async function scrapeMurfs() {
 // ============================================
 // 3. CULVER'S LOCATIONS SCRAPER
 // ============================================
-// Each Culver's has its own page with calendar structure
 
 const CULVERS_LOCATIONS = [
   {
@@ -323,35 +405,23 @@ const CULVERS_LOCATIONS = [
 ];
 
 async function scrapeCulvers(locationData) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const page = await browser.newPage();
+  let browser, page;
 
   try {
-    const url = `https://www.culvers.com/restaurants/${locationData.slug}`;
-    await page.goto(url, {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-    });
+    browser = await getBrowser();
+    page = await browser.newPage();
 
+    const url = `https://www.culvers.com/restaurants/${locationData.slug}`;
+    await safePageNavigation(page, url);
     await page.waitForTimeout(2000);
 
-    const flavors = [];
-
-    // Use page.evaluate to extract flavor calendar
     const flavorData = await page.evaluate(() => {
       const results = [];
-      const today = new Date();
-
-      // Look for calendar structure - h3 headings with day labels
       const dayHeaders = document.querySelectorAll("h3");
 
       dayHeaders.forEach((header) => {
         const headerText = header.textContent.trim();
 
-        // Match "Today - Monday, January 05", "Tomorrow - Tuesday, January 06", etc.
         if (
           headerText.includes("Today") ||
           headerText.includes("Tomorrow") ||
@@ -363,7 +433,6 @@ async function scrapeCulvers(locationData) {
           headerText.includes("Saturday") ||
           headerText.includes("Sunday")
         ) {
-          // Find the flavor link/text nearby
           const parent = header.parentElement;
           const flavorLink = parent.querySelector(
             'a[href*="flavor-of-the-day"]'
@@ -389,7 +458,11 @@ async function scrapeCulvers(locationData) {
       return results;
     });
 
-    await browser.close();
+    await page.close();
+
+    logger.info(
+      `Culver's ${locationData.location} scraped - ${flavorData.length} flavors`
+    );
 
     return {
       ...locationData,
@@ -402,7 +475,7 @@ async function scrapeCulvers(locationData) {
           ? flavorData
           : [
               {
-                date: new Date().toISOString().split("T")[0],
+                date: getStandardDate(0),
                 dayLabel: "today",
                 flavors: [
                   {
@@ -414,11 +487,8 @@ async function scrapeCulvers(locationData) {
             ],
     };
   } catch (error) {
-    console.error(
-      `Error scraping Culvers ${locationData.slug}:`,
-      error.message
-    );
-    await browser.close();
+    logger.error(`Error scraping Culvers ${locationData.slug}:`, error.message);
+    if (page) await page.close();
     return {
       ...locationData,
       id: `culvers-${locationData.slug}`,
@@ -427,7 +497,7 @@ async function scrapeCulvers(locationData) {
       website: `https://www.culvers.com/restaurants/${locationData.slug}`,
       flavors: [
         {
-          date: new Date().toISOString().split("T")[0],
+          date: getStandardDate(0),
           dayLabel: "today",
           flavors: [
             {
@@ -445,11 +515,8 @@ async function scrapeAllCulvers() {
   const results = [];
 
   for (const location of CULVERS_LOCATIONS) {
-    console.log(`Scraping Culver's ${location.location}...`);
     const data = await scrapeCulvers(location);
     results.push(data);
-
-    // Delay to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
@@ -457,9 +524,8 @@ async function scrapeAllCulvers() {
 }
 
 // ============================================
-// 4. LEON'S FROZEN CUSTARD
+// 4. LEON'S FROZEN CUSTARD (STATIC)
 // ============================================
-// Leon's has permanent flavors, no daily changes
 
 function scrapeLeonsStatic() {
   return [
@@ -474,7 +540,7 @@ function scrapeLeonsStatic() {
       website: "https://leonsfrozencustardmke.com",
       flavors: [
         {
-          date: new Date().toISOString().split("T")[0],
+          date: getStandardDate(0),
           dayLabel: "always",
           flavors: [
             {
@@ -503,29 +569,24 @@ function scrapeLeonsStatic() {
 // ============================================
 // 5. GILLES FROZEN CUSTARD
 // ============================================
-// Seasonal operation - closed winter, has FOTD when open
 
 async function scrapeGilles() {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const page = await browser.newPage();
+  let browser, page;
 
   try {
-    await page.goto("https://gillesfrozencustard.com", {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-    });
+    browser = await getBrowser();
+    page = await browser.newPage();
+
+    await safePageNavigation(page, "https://gillesfrozencustard.com");
 
     const html = await page.content();
     const $ = cheerio.load(html);
 
-    // Check for closed status
     const bodyText = $("body").text().toLowerCase();
 
     if (bodyText.includes("closed") && bodyText.includes("winter")) {
-      await browser.close();
+      await page.close();
+      logger.info("Gilles is closed for winter");
       return [
         {
           id: "gilles-milwaukee",
@@ -538,7 +599,7 @@ async function scrapeGilles() {
           website: "https://gillesfrozencustard.com",
           flavors: [
             {
-              date: new Date().toISOString().split("T")[0],
+              date: getStandardDate(0),
               dayLabel: "closed",
               flavors: [
                 {
@@ -552,7 +613,6 @@ async function scrapeGilles() {
       ];
     }
 
-    // If open, scrape flavor
     const flavorHeading = $('.featured h3, h3:contains("Flavor")')
       .first()
       .text()
@@ -562,7 +622,9 @@ async function scrapeGilles() {
       .text()
       .trim();
 
-    await browser.close();
+    await page.close();
+
+    logger.info("Gilles scraped successfully");
 
     return [
       {
@@ -576,7 +638,7 @@ async function scrapeGilles() {
         website: "https://gillesfrozencustard.com",
         flavors: [
           {
-            date: new Date().toISOString().split("T")[0],
+            date: getStandardDate(0),
             dayLabel: "today",
             flavors: [
               {
@@ -590,8 +652,8 @@ async function scrapeGilles() {
       },
     ];
   } catch (error) {
-    console.error("Error scraping Gilles:", error.message);
-    await browser.close();
+    logger.error("Error scraping Gilles:", error.message);
+    if (page) await page.close();
     return [
       {
         id: "gilles-milwaukee",
@@ -604,7 +666,7 @@ async function scrapeGilles() {
         website: "https://gillesfrozencustard.com",
         flavors: [
           {
-            date: new Date().toISOString().split("T")[0],
+            date: getStandardDate(0),
             dayLabel: "today",
             flavors: [
               {
@@ -620,126 +682,179 @@ async function scrapeGilles() {
 }
 
 // ============================================
-// 6. MASTER SCRAPER
+// 6. MASTER SCRAPER WITH ERROR RESILIENCE
 // ============================================
 
 async function scrapeAllStands() {
-  console.log("🍦 Starting Milwaukee Custard Tracker scrape...");
+  logger.info("Starting Milwaukee Custard Tracker scrape");
 
   const results = {
     timestamp: new Date().toISOString(),
     lastUpdated: new Date().toLocaleString("en-US", {
-      timeZone: "America/Chicago",
+      timeZone: CONFIG.TIMEZONE,
     }),
     totalLocations: 0,
     stands: [],
+    errors: [],
   };
 
-  try {
-    // Scrape Kopp's (3 locations)
-    console.log("📍 Scraping Kopp's...");
-    const koppsData = await scrapeKopps();
-    results.stands.push(...koppsData);
+  const scrapers = [
+    { name: "Kopp's", fn: scrapeKopps },
+    { name: "Murf's", fn: scrapeMurfs },
+    { name: "Culver's", fn: scrapeAllCulvers },
+    { name: "Leon's", fn: scrapeLeonsStatic },
+    { name: "Gilles", fn: scrapeGilles },
+  ];
 
-    // Scrape Murf's (1 location)
-    console.log("📍 Scraping Murf's...");
-    const murfsData = await scrapeMurfs();
-    results.stands.push(...murfsData);
-
-    // Scrape Culver's (5 locations)
-    console.log("📍 Scraping Culver's...");
-    const culversData = await scrapeAllCulvers();
-    results.stands.push(...culversData);
-
-    // Add Leon's (static data)
-    console.log("📍 Adding Leon's...");
-    const leonsData = scrapeLeonsStatic();
-    results.stands.push(...leonsData);
-
-    // Scrape Gilles
-    console.log("📍 Scraping Gilles...");
-    const gillesData = await scrapeGilles();
-    results.stands.push(...gillesData);
-
-    results.totalLocations = results.stands.length;
-
-    console.log(
-      `✅ Scraping complete! Found ${results.totalLocations} locations`
-    );
-  } catch (error) {
-    console.error("❌ Error during scraping:", error.message);
+  for (const scraper of scrapers) {
+    try {
+      logger.info(`Scraping ${scraper.name}...`);
+      const data = await scraper.fn();
+      results.stands.push(...data);
+    } catch (error) {
+      logger.error(`Failed to scrape ${scraper.name}:`, error.message);
+      results.errors.push({
+        scraper: scraper.name,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
+
+  results.totalLocations = results.stands.length;
+
+  logger.info(
+    `Scraping complete - ${results.totalLocations} locations, ${results.errors.length} errors`
+  );
 
   return results;
 }
 
 // ============================================
-// 7. CRON SCHEDULER
+// 7. FILE SYSTEM OPERATIONS
 // ============================================
 
-// Run every day at 6 AM Central Time
-cron.schedule(
-  "0 6 * * *",
-  async () => {
-    console.log(
-      "⏰ Running scheduled flavor scrape at",
-      new Date().toLocaleString()
-    );
-
-    try {
-      const data = await scrapeAllStands();
-
-      // Save to JSON file
-      await fs.writeFile("./data/flavors.json", JSON.stringify(data, null, 2));
-
-      console.log("💾 Flavor data saved successfully");
-    } catch (error) {
-      console.error("❌ Scheduled scrape failed:", error.message);
-    }
-  },
-  {
-    timezone: "America/Chicago",
+async function ensureDataDirectory() {
+  try {
+    await fs.mkdir(CONFIG.DATA_DIR, { recursive: true });
+    logger.info(`Data directory ensured: ${CONFIG.DATA_DIR}`);
+  } catch (error) {
+    logger.error("Failed to create data directory:", error.message);
+    throw error;
   }
-);
+}
+
+async function saveFlavorData(data) {
+  try {
+    await ensureDataDirectory();
+    const filePath = path.join(CONFIG.DATA_DIR, "flavors.json");
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    logger.info(`Flavor data saved to ${filePath}`);
+    return true;
+  } catch (error) {
+    logger.error("Failed to save flavor data:", error.message);
+    throw error;
+  }
+}
+
+async function loadFlavorData() {
+  try {
+    const filePath = path.join(CONFIG.DATA_DIR, "flavors.json");
+    const data = await fs.readFile(filePath, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      logger.warn("Flavor data file not found, returning empty dataset");
+      return {
+        timestamp: new Date().toISOString(),
+        lastUpdated: "No data available",
+        totalLocations: 0,
+        stands: [],
+        errors: [],
+      };
+    }
+    throw error;
+  }
+}
 
 // ============================================
-// 8. EXPRESS API SERVER
+// 8. CRON SCHEDULER
+// ============================================
+
+function initCronScheduler() {
+  cron.schedule(
+    CONFIG.SCRAPE_SCHEDULE,
+    async () => {
+      logger.info("Running scheduled flavor scrape");
+
+      try {
+        const data = await scrapeAllStands();
+        await saveFlavorData(data);
+        logger.info("Scheduled scrape completed successfully");
+      } catch (error) {
+        logger.error("Scheduled scrape failed:", error.message);
+      }
+    },
+    {
+      timezone: CONFIG.TIMEZONE,
+    }
+  );
+
+  logger.info(
+    `Cron scheduler initialized: ${CONFIG.SCRAPE_SCHEDULE} ${CONFIG.TIMEZONE}`
+  );
+}
+
+// ============================================
+// 9. EXPRESS API SERVER
 // ============================================
 
 const app = express();
+
+// Middleware
 app.use(express.json());
+app.use(cors({ origin: "*" }));
 
-// Enable CORS
-app.use(
-  cors({
-    origin: "*",
-  })
-);
+// Request logging middleware
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`);
+  next();
+});
 
-// Root route to verify server is running
+// Root route
 app.get("/", (req, res) => {
-  res.send({
+  res.json({
     status: "OK",
-    message: "Milwaukee Custard Tracker API is running!",
-    time: new Date().toISOString(),
+    service: "Milwaukee Custard Tracker API",
+    version: "1.0.0",
+    environment: CONFIG.NODE_ENV,
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: "GET /api/health",
+      allFlavors: "GET /api/flavors",
+      locationFlavors: "GET /api/flavors/:locationId",
+      triggerScrape: "POST /api/scrape",
+    },
   });
 });
 
-// app.use((req, res, next) => {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept"
-//   );
-//   next();
-// });
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    memory: process.memoryUsage(),
+  });
+});
 
-// GET all flavors
+// Get all flavors
 app.get("/api/flavors", async (req, res) => {
   try {
-    const data = await fs.readFile("./data/flavors.json", "utf8");
-    res.json(JSON.parse(data));
+    const data = await loadFlavorData();
+    res.json(data);
   } catch (error) {
+    logger.error("Error loading flavors:", error.message);
     res.status(500).json({
       error: "Failed to load flavor data",
       message: error.message,
@@ -747,37 +862,45 @@ app.get("/api/flavors", async (req, res) => {
   }
 });
 
-// GET specific location
+// Get specific location
 app.get("/api/flavors/:locationId", async (req, res) => {
   try {
-    const data = await fs.readFile("./data/flavors.json", "utf8");
-    const allData = JSON.parse(data);
-    const location = allData.stands.find((s) => s.id === req.params.locationId);
+    const data = await loadFlavorData();
+    const location = data.stands.find((s) => s.id === req.params.locationId);
 
     if (location) {
       res.json(location);
     } else {
-      res.status(404).json({ error: "Location not found" });
+      res.status(404).json({
+        error: "Location not found",
+        locationId: req.params.locationId,
+      });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    logger.error("Error loading location:", error.message);
+    res.status(500).json({
+      error: "Failed to load location data",
+      message: error.message,
+    });
   }
 });
 
-// POST trigger manual scrape
+// Manual scrape trigger
 app.post("/api/scrape", async (req, res) => {
   try {
-    console.log("🔄 Manual scrape triggered");
+    logger.info("Manual scrape triggered via API");
     const data = await scrapeAllStands();
-
-    await fs.writeFile("./data/flavors.json", JSON.stringify(data, null, 2));
+    await saveFlavorData(data);
 
     res.json({
       success: true,
       message: "Scrape completed successfully",
-      data: data,
+      timestamp: new Date().toISOString(),
+      totalLocations: data.totalLocations,
+      errors: data.errors,
     });
   } catch (error) {
+    logger.error("Manual scrape failed:", error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -785,43 +908,99 @@ app.post("/api/scrape", async (req, res) => {
   }
 });
 
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    message: "Milwaukee Custard Tracker API is running",
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Endpoint not found",
+    path: req.path,
+    method: req.method,
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.error("Unhandled error:", err.message);
+  res.status(500).json({
+    error: "Internal server error",
+    message:
+      CONFIG.NODE_ENV === "development" ? err.message : "An error occurred",
   });
 });
 
 // ============================================
-// 9. START SERVER
+// 10. GRACEFUL SHUTDOWN
 // ============================================
 
-const PORT = process.env.PORT || 4000;
+async function gracefulShutdown(signal) {
+  logger.info(`${signal} received, starting graceful shutdown`);
 
-app.listen(PORT, async () => {
-  console.log(`🚀 Milwaukee Custard Tracker API running on port ${PORT}`);
-  console.log(`📊 API endpoints:`);
-  console.log(`   GET  /api/flavors - Get all locations and flavors`);
-  console.log(`   GET  /api/flavors/:id - Get specific location`);
-  console.log(`   POST /api/scrape - Trigger manual scrape`);
-  console.log(`   GET  /api/health - Health check`);
-
-  // Run initial scrape on startup
-  console.log("\n🔄 Running initial scrape...");
   try {
-    const data = await scrapeAllStands();
-    await fs.mkdir("./data", { recursive: true });
-    await fs.writeFile("./data/flavors.json", JSON.stringify(data, null, 2));
-    console.log("✅ Initial scrape complete\n");
+    await closeBrowser();
+    logger.info("Browser closed successfully");
   } catch (error) {
-    console.error("❌ Initial scrape failed:", error.message);
+    logger.error("Error during shutdown:", error.message);
   }
+
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// Handle uncaught errors
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught Exception:", error.message);
+  gracefulShutdown("uncaughtException");
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("Unhandled Rejection:", reason);
 });
 
 // ============================================
-// 10. EXPORTS
+// 11. STARTUP SEQUENCE
+// ============================================
+
+async function startServer() {
+  try {
+    logger.info("Starting Milwaukee Custard Tracker API");
+    logger.info(`Environment: ${CONFIG.NODE_ENV}`);
+    logger.info(`Port: ${CONFIG.PORT}`);
+
+    // Ensure data directory exists
+    await ensureDataDirectory();
+
+    // Run initial scrape
+    logger.info("Running initial scrape...");
+    try {
+      const data = await scrapeAllStands();
+      await saveFlavorData(data);
+      logger.info("Initial scrape completed successfully");
+    } catch (error) {
+      logger.error("Initial scrape failed:", error.message);
+      logger.warn("Server will start with empty/cached data");
+    }
+
+    // Initialize cron scheduler
+    initCronScheduler();
+
+    // Start Express server
+    app.listen(CONFIG.PORT, "0.0.0.0", () => {
+      logger.info(`Server running on port ${CONFIG.PORT}`);
+      logger.info(`Health check: http://localhost:${CONFIG.PORT}/api/health`);
+      logger.info(`API ready: http://localhost:${CONFIG.PORT}/api/flavors`);
+    });
+  } catch (error) {
+    logger.error("Failed to start server:", error.message);
+    process.exit(1);
+  }
+}
+
+// Start the application
+startServer();
+
+// ============================================
+// 12. EXPORTS FOR TESTING
 // ============================================
 
 module.exports = {
@@ -831,4 +1010,5 @@ module.exports = {
   scrapeLeonsStatic,
   scrapeGilles,
   scrapeAllStands,
+  app,
 };
