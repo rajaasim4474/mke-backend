@@ -1,15 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "/scraper.js",
-      "use": "@vercel/node"
+  "functions": {
+    "src/scrape.js": {
+      "runtime": "nodejs18.x",
+      "memory": 3008,
+      "maxDuration": 30
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/scraper.js"
-    }
-  ]
+  },
+  "routes": [{ "src": "/src/(.*)", "dest": "/src/$1.js" }]
 }
