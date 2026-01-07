@@ -710,7 +710,11 @@ const app = express();
 app.use(express.json());
 
 // Enable CORS
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 // Root route to verify server is running
 app.get("/", (req, res) => {
