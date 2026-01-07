@@ -709,6 +709,16 @@ const app = express();
 app.use(express.json());
 
 // Enable CORS
+
+// Root route to verify server is running
+app.get("/", (req, res) => {
+  res.send({
+    status: "OK",
+    message: "Milwaukee Custard Tracker API is running!",
+    time: new Date().toISOString(),
+  });
+});
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
